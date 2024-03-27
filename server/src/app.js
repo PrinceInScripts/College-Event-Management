@@ -17,5 +17,9 @@ app.use(express.static("public"))
 app.use(cookieParser())
 app.use(morgan('dev'))
 
+import indexRoutes from "../src/routes/index.js"
+
+app.use("/api/v1",indexRoutes)
+
 app.use(errorHandler);
 export {app}
