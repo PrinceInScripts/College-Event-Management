@@ -1,7 +1,10 @@
 import mongoose,{ Schema } from "mongoose" 
 import { AvailableUserGenderEnum, AvailableUserRoles, USER_TEMPORARY_TOKEN_EXPIRY, userRolesEnum } from "../constant.js";
+import bcrypt from "bcrypt"
+import { randomBytes, createHash } from "crypto";
+import jwt from "jsonwebtoken"
 
-const studentSchema=new Schema({
+const userSchema=new Schema({
        username:{
         type:String,
         required:true,
@@ -34,9 +37,8 @@ const studentSchema=new Schema({
         type:Date
     },
     gender:{
-        type:string,
+        type:String,
         enum:AvailableUserGenderEnum,
-        default:""
     },
     address:{
         type:String
@@ -80,19 +82,19 @@ const studentSchema=new Schema({
     },
 },{timestamps:true})
 
-studentSchema.pre("save",async function(next){
-    if(!this.modified("password")) return next();
+userSchema.pre("save",async function(next){
+    if(!this.isModified("password")) return next();
 
     this.password=await bcrypt.hash(this.password,10)
     next();
 })
 
 
-studentSchema.methods.isPasswordCorrect=async function(password){
+userSchema.methods.isPasswordCorrect=async function(password){
     return await bcrypt.compare(password,this.password)
 }
 
-studentSchema.methods.generateAccessToken=function(){
+userSchema.methods.generateAccessToken=function(){
     return jwt.sign(
         {
             _id:this._id,
@@ -107,7 +109,7 @@ studentSchema.methods.generateAccessToken=function(){
     )
 }
 
-studentSchema.methods.generateRefreshToken=function(){
+userSchema.methods.generateRefreshToken=function(){
     return jwt.sign(
         {
             _id:this._id,
@@ -119,18 +121,15 @@ studentSchema.methods.generateRefreshToken=function(){
     )
 }
 
-studentSchema.methods.generateTemporaryToken=function(){
-    const unHashedToken=crypto.randomBytes(20).toString("hex")
+userSchema.methods.generateTemporaryToken = function () {
+    const unHashedToken = randomBytes(20).toString("hex"); // Using randomBytes from crypto
 
-    const hashedToken=crypto 
-                            .createHash("sha26")
-                            .update(unHashedToken)
-                            .digest("hex")
+    const hashedToken = createHash("sha256").update(unHashedToken).digest("hex"); // Using createHash from crypto
 
-    const tokenExpiry=Date.now() + USER_TEMPORARY_TOKEN_EXPIRY
+    const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
 
-    return {unHashedToken,hashedToken,tokenExpiry}
-}
+    return { unHashedToken, hashedToken, tokenExpiry };
+};
 
-export const Student=mongoose.model("Student",studentSchema);
+export const User=mongoose.model("User",userSchema);
 

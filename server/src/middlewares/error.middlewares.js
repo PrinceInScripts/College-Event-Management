@@ -18,7 +18,6 @@ const errorHandler = (err, req, res, next) => {
 
     console.error('Caught error:', error);
 
-    removeUnusedMulterImageFilesOnError(req);
 
     return res.status(error.statusCode).json(response);
 };
