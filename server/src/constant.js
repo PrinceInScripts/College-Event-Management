@@ -7,3 +7,12 @@ export const userRolesEnum={
 }
 
 export const AvailableUserRoles=Object.values(userRolesEnum)
+
+
+export const userGenderEnum={
+    MALE:"MALE",
+    FEMALE:"FEMALE",
+    OTHER:"OTHER"
+}
+
+export const AvailableUserGenderEnum=Object.values(userGenderEnum)
