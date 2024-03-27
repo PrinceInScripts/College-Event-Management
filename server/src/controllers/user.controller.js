@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.utils.js"
 import { ApiResponse } from "../utils/ApiResponse.utils.js"
 import { asyncHandler } from "../utils/asyncHandler.utils.js"
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.utils.js"
+import crypto from "crypto"
 
 
 const registerUser=asyncHandler(async (req,res)=>{
@@ -62,7 +63,40 @@ const registerUser=asyncHandler(async (req,res)=>{
               )
 })
 
+const verifyEmail=asyncHandler(async(req,res)=>{
+    const {verificationToken}=req.params;
+
+    if(!verificationToken){
+        throw new ApiError(400,"Email verification token is missing")
+    }
+
+    let hashedToken=crypto
+                        .createHash("sha256")
+                        .update(verificationToken)
+                        .digest("hex")
+
+    const user=await User.findOne({
+        emailVerificationToken:hashedToken,
+        emailVerificationExpiry:{$gt:Date.now()}
+    })
+
+    if(!user){
+        throw new ApiError(400,"token is invalid or expired")
+    }
+
+    user.emailVerificationToken=undefined
+    user.emailVerificationExpiry=undefined
+
+    user.isEmailVerified=true
+    await user.save({validateBeforeSave:false})
+
+    return res
+             .status(200)
+             .json(new ApiResponse(200, {isEmailVerified:true}, "Email verified successfully"));
+})
+
 
 export {
-    registerUser
+    registerUser,
+    verifyEmail
 }
