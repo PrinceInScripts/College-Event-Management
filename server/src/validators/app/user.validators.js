@@ -33,9 +33,20 @@ const userLoginValidator = () => {
     ];
   };
   
+  const userForgotPasswordValidator = () => {
+    return [
+        body("email").optional().isEmail().withMessage("Email is invalid"),
+        body("username").optional(),
+    ];
+  };
   
+  const userResetForgottenPasswordValidator = () => {
+    return [body("newPassword").notEmpty().withMessage("Password is required")];
+  };
 
 export {
     userRegisterValidator,
-    userLoginValidator
+    userLoginValidator,
+    userForgotPasswordValidator,
+    userResetForgottenPasswordValidator
 }
