@@ -4,7 +4,7 @@ import { User } from "../models/user.models.js"
 import { ApiError } from "../utils/ApiError.utils.js"
 import { ApiResponse } from "../utils/ApiResponse.utils.js"
 import { asyncHandler } from "../utils/asyncHandler.utils.js"
-import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.utils.js"
+import { emailVerificationMailgenContent, forgotPasswordMailgenContent, sendEmail } from "../utils/mail.utils.js"
 import crypto from "crypto"
 
 const generateAccessAndRefreshTokens=async (userId)=>{
@@ -154,10 +154,72 @@ const loginInUser=asyncHandler(async(req,res)=>{
 })
 
 
+const logoutUser=asyncHandler(async(req,res)=>{
+    await User.findByIdAndUpdate(req.user._id,{
+      $set:{
+          refreshToken:undefined,
+      }
+    },
+    {new:true}
+    )
+  
+    const options={
+      httpOnly:true,
+      secure:true
+      // secure: process.env.NODE_ENV === "production",
+   }
+
+   return res
+              .status(200)
+              .clearCookie("accessToken", options)
+              .clearCookie("refreshToken", options)
+              .json(new ApiResponse(200, {}, "User logged out"));
+
+
+})
+
+const resendEmailVerification=asyncHandler(async (req,res)=>{
+  
+    const user=await User.findById(req.user?._id)
+   
+    if(!user){
+        throw new ApiError(400,"User does not exists",[])
+    }
+
+    if(user.isEmailVerified){
+        throw new ApiError(400,"Email is already verified!",)
+    }
+
+    const { unHashedToken, hashedToken, tokenExpiry }=user.generateTemporaryToken()
+
+    user.emailVerificationToken=hashedToken
+    user.emailVerificationExpiry=tokenExpiry
+    await user.save({validateBeforeSave:false})
+ 
+
+    await sendEmail({
+        email:user?.email,
+        subject:"Please verify your email",
+        mailgenContent:emailVerificationMailgenContent(
+            user.username,
+            `${req.protocol}://${req.get(
+                "host"
+              )}/api/v1/users/verify-email/${unHashedToken}`
+        )
+    })
+
+    return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Mail has been sent to your mail ID"));
+})
+
+
 
 
 export {
     registerUser,
     verifyEmail,
-    loginInUser
+    loginInUser,
+    logoutUser,
+    resendEmailVerification
 }
