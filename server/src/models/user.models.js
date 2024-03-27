@@ -1,5 +1,5 @@
 import mongoose,{ Schema } from "mongoose" 
-import { AvailableUserGenderEnum, AvailableUserRoles, userRolesEnum } from "../constant";
+import { AvailableUserGenderEnum, AvailableUserRoles, USER_TEMPORARY_TOKEN_EXPIRY, userRolesEnum } from "../constant.js";
 
 const studentSchema=new Schema({
        username:{
@@ -88,7 +88,49 @@ studentSchema.pre("save",async function(next){
 })
 
 
+studentSchema.methods.isPasswordCorrect=async function(password){
+    return await bcrypt.compare(password,this.password)
+}
 
+studentSchema.methods.generateAccessToken=function(){
+    return jwt.sign(
+        {
+            _id:this._id,
+            email:this.email,
+            username:this.email,
+            role:this.role
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+            expiresIn:process.env.ACCESS_TOKEN_EXPIRY
+        }
+    )
+}
+
+studentSchema.methods.generateRefreshToken=function(){
+    return jwt.sign(
+        {
+            _id:this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+            expiresIn:process.env.REFRESH_TOKEN_EXPIRY
+        }
+    )
+}
+
+studentSchema.methods.generateTemporaryToken=function(){
+    const unHashedToken=crypto.randomBytes(20).toString("hex")
+
+    const hashedToken=crypto 
+                            .createHash("sha26")
+                            .update(unHashedToken)
+                            .digest("hex")
+
+    const tokenExpiry=Date.now() + USER_TEMPORARY_TOKEN_EXPIRY
+
+    return {unHashedToken,hashedToken,tokenExpiry}
+}
 
 export const Student=mongoose.model("Student",studentSchema);
 

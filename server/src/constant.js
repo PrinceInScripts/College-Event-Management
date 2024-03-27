@@ -16,3 +16,7 @@ export const userGenderEnum={
 }
 
 export const AvailableUserGenderEnum=Object.values(userGenderEnum)
+
+
+export const USER_TEMPORARY_TOKEN_EXPIRY = 20 * 60 * 1000;
+export const MAXIMUM_SUB_IMAGE_COUNT = 4;
