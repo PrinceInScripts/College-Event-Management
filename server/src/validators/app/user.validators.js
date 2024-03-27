@@ -60,11 +60,45 @@ const userLoginValidator = () => {
     ];
  };
 
+
+ const updateProfileValidator = () => {
+    return [
+        body("fullname")
+            .optional()
+            .trim()
+            .notEmpty()
+            .withMessage("Fullname is required"),
+        body("birthday")
+            .optional()
+            .isISO8601()
+            .toDate()
+            .withMessage("Invalid birthday format"),
+        body("gender")
+            .optional()
+            .trim()
+            .isIn(["male", "female", "other"])
+            .withMessage("Invalid gender"),
+        body("address")
+            .optional()
+            .trim()
+            .notEmpty()
+            .withMessage("Address is required"),
+        body("phoneNumber")
+            .optional()
+            .trim()
+            .notEmpty()
+            .withMessage("Phone number is required")
+            .isMobilePhone()
+            .withMessage("Invalid phone number format")
+    ];
+};
+
 export {
     userRegisterValidator,
     userLoginValidator,
     userForgotPasswordValidator,
     userResetForgottenPasswordValidator,
     userChangeCurrentPasswordValidator,
-    userAssignRoleValidator
+    userAssignRoleValidator,
+    updateProfileValidator
 }

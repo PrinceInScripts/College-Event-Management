@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.utils.js"
 import { asyncHandler } from "../utils/asyncHandler.utils.js"
 import { emailVerificationMailgenContent, forgotPasswordMailgenContent, sendEmail } from "../utils/mail.utils.js"
 import crypto from "crypto"
+import { uploadCloudinary } from "../utils/cloudinary.utils.js"
 
 const generateAccessAndRefreshTokens=async (userId)=>{
     try {
@@ -313,6 +314,76 @@ const assignRole = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, {}, "Role Changed for user successfully"));
   });
 
+const getCurrentUser=asyncHandler(async(req,res)=>{
+    return res
+              .status(200)
+              .json(new ApiResponse(200, req.user, "User fetched successfully"));
+})
+
+const updateUserAvatar=asyncHandler(async(req,res)=>{
+    const avatarLocalPath=req.file?.path
+
+    if(!avatarLocalPath){
+        throw new ApiError(400,"Avatar file is missing")
+    }
+
+    const avatar=await uploadCloudinary(avatarLocalPath)
+   
+    if(!avatar){
+        throw new ApiError(400,"Error while uploading on avatar")
+    }
+
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,{
+            $set:{
+                avatar:avatar?.url
+            }
+        },
+        {new:true}
+    ).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry")
+
+    return res
+             .status(200)
+             .json(
+                new ApiResponse(
+                    200,
+                    user,
+                    "User avatar successfully"
+                )
+             )
+    
+})
+
+const updateProfile=asyncHandler(async(req,res)=>{
+    const {fullname,birthday,gender,address,phone}=req.body;
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                fullname,
+                birthday,
+                gender,
+                address,
+                phone
+            }
+        },
+        {
+            new:true,
+        }
+    )
+
+    return res.
+              status(200)
+              .json(
+                new ApiResponse(
+                    200,
+                    user,
+                    "User profile updated successfully"
+                )
+              )
+})
+
+
 export {
     registerUser,
     verifyEmail,
@@ -322,5 +393,8 @@ export {
     forgotPassword,
     resetForgotPassword,
     changeCurrentPassword,
-    assignRole
+    assignRole,
+    getCurrentUser,
+    updateUserAvatar,
+    updateProfile
 }
