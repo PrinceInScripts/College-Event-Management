@@ -113,7 +113,7 @@ const verifyEmail=asyncHandler(async(req,res)=>{
 })
 
 const loginInUser=asyncHandler(async(req,res)=>{
-    const {email,username,password}=req.body
+    const {email,username,password,role}=req.body
 
 
     const user=await User.findOne({
@@ -124,7 +124,9 @@ const loginInUser=asyncHandler(async(req,res)=>{
        throw new ApiError(401,"Invalid credentials")
     }
 
-   
+    if(role !== user?.role){
+        throw new ApiError(409,"Your Role is Not Matched")
+    }
     const isPasswordValid=await user.isPasswordCorrect(password)
 
     if(!isPasswordValid){
