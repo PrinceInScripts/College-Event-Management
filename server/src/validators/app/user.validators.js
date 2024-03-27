@@ -51,11 +51,20 @@ const userLoginValidator = () => {
     ];
   };
   
+  const userAssignRoleValidator = () => {
+    return [
+      body("role")
+        .optional()
+        .isIn(AvailableUserRoles)
+        .withMessage("Invalid user role"),
+    ];
+ };
 
 export {
     userRegisterValidator,
     userLoginValidator,
     userForgotPasswordValidator,
     userResetForgottenPasswordValidator,
-    userChangeCurrentPasswordValidator
+    userChangeCurrentPasswordValidator,
+    userAssignRoleValidator
 }

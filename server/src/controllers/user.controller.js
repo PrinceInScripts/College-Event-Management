@@ -295,7 +295,23 @@ const changeCurrentPassword =asyncHandler(async(req,res)=>{
 
 })
 
-
+const assignRole = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { role } = req.body;
+  
+    const user = await User.findById(userId);
+  
+    if (!user) {
+      throw new ApiError(401, "User does not existed");
+    }
+  
+    user.role = role;
+    await user.save({ validateBeforeSave: false });
+  
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Role Changed for user successfully"));
+  });
 
 export {
     registerUser,
@@ -305,5 +321,6 @@ export {
     resendEmailVerification,
     forgotPassword,
     resetForgotPassword,
-    changeCurrentPassword
+    changeCurrentPassword,
+    assignRole
 }
