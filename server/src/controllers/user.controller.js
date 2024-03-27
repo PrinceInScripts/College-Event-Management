@@ -7,6 +7,22 @@ import { asyncHandler } from "../utils/asyncHandler.utils.js"
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.utils.js"
 import crypto from "crypto"
 
+const generateAccessAndRefreshTokens=async (userId)=>{
+    try {
+        const user=await User.findById(userId)
+
+        const accessToken=user.generateAccessToken()
+        const refreshToken=user.generateRefreshToken()
+
+        user.refreshToken=refreshToken;
+
+        await user.save({validateBeforeSave:false})
+
+        return {accessToken,refreshToken}
+    } catch (error) {
+        throw new ApiError(500,"Something went wrong while generating the access token")
+    }
+}
 
 const registerUser=asyncHandler(async (req,res)=>{
     const {username,email,password,role}=req.body
@@ -95,8 +111,53 @@ const verifyEmail=asyncHandler(async(req,res)=>{
              .json(new ApiResponse(200, {isEmailVerified:true}, "Email verified successfully"));
 })
 
+const loginInUser=asyncHandler(async(req,res)=>{
+    const {email,username,password}=req.body
+
+
+    const user=await User.findOne({
+       $or:[{email},{username}]
+    })
+
+    if(!user){
+       throw new ApiError(401,"Invalid credentials")
+    }
+
+   
+    const isPasswordValid=await user.isPasswordCorrect(password)
+
+    if(!isPasswordValid){
+       throw new ApiError(401,"Invalid user credentials")
+    }
+
+    const {accessToken,refreshToken}=await generateAccessAndRefreshTokens(user._id)
+
+    const loggedInUser=await User.findById(user._id).select( "-password -refreshToken -emailVerificationToken -emailVerificationExpiry")
+
+    const options={
+       httpOnly:true,
+       secure:true
+       // secure: process.env.NODE_ENV === "production",
+    }
+
+    return res
+              .status(200)
+              .cookie("accessToken",accessToken,options)
+              .cookie("refreshToken",refreshToken,options)
+              .json(
+               new ApiResponse(
+                   200,
+                   {user:loggedInUser,accessToken,refreshToken},
+                   "User Logged in Successfully"
+               )
+              )
+})
+
+
+
 
 export {
     registerUser,
-    verifyEmail
+    verifyEmail,
+    loginInUser
 }
