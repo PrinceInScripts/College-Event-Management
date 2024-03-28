@@ -49,18 +49,18 @@ const userSchema=new Schema({
     avatar:{
         type:String
     },
-    department:{
+    department:[{
         type:Schema.Types.ObjectId,
         ref:"Department"
-    },
-    eventAttended:{
+    }],
+    eventAttended:[{
         type:Schema.Types.ObjectId,
         ref:"Event"
-    },
-    eventOrganized:{
+    }],
+    eventOrganized:[{
         type:Schema.Types.ObjectId,
         ref:"Event"
-    },
+    }],
     isEmailVerified:{
         type:Boolean,
         default:false,
@@ -130,6 +130,15 @@ userSchema.methods.generateTemporaryToken = function () {
 
     return { unHashedToken, hashedToken, tokenExpiry };
 };
+
+userSchema.methods.assignAsDepartmentHead = async function(departmentId) {
+    if (this.role !== userRolesEnum.STAFF) {
+      this.role = userRolesEnum.STAFF;
+    }
+   
+    this.department = departmentId;
+    await this.save();
+  };
 
 export const User=mongoose.model("User",userSchema);
 
