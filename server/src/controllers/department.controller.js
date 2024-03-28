@@ -87,9 +87,39 @@ const getDepartmentById=asyncHandler(async(req,res)=>{
 })
 
 
+const updateDepartmentById=asyncHandler(async (req,res)=>{
+    const {name,description,address,phone,email}=req.body;
+    const {departmentId}=req.params
+
+    const department=await Department.findById(departmentId)
+
+    if(!department){
+        throw new ApiError(404,"Department not found")
+    }
+    
+
+    department.name = name || department.name;
+    department.description = description || department.description;
+    department.contactInfo.address=address || department.contactInfo.address;
+    department.contactInfo.phone=phone || department.contactInfo.phone;
+    department.contactInfo.email=email || department.contactInfo.email;
+
+    await department.save({validateBeforeSave:false})
+
+    return res
+             .status(201)
+             .json(
+                new ApiResponse(
+                    200,
+                    department,
+                    "Department updated successfully"
+                )
+             )
+
+})
 export {
     createDepartment,
     getAllDepartment,
-    getDepartmentById
-    
+    getDepartmentById,
+    updateDepartmentById
 }
