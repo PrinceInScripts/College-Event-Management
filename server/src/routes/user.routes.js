@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { assignRole, changeCurrentPassword, forgotPassword, getCurrentUser, loginInUser, logoutUser, registerUser, resendEmailVerification, resetForgotPassword, updateProfile, updateUserAvatar, verifyEmail } from "../controllers/user.controller.js";
+import { assignRole, changeCurrentPassword, forgotPassword, getAllStaff, getCurrentUser, loginInUser, logoutUser, registerUser, resendEmailVerification, resetForgotPassword, updateProfile, updateUserAvatar, verifyEmail } from "../controllers/user.controller.js";
 import { updateProfileValidator, userAssignRoleValidator, userChangeCurrentPasswordValidator, userForgotPasswordValidator, userLoginValidator, userRegisterValidator, userResetForgottenPasswordValidator } from "../validators/app/user.validators.js";
 import { validate } from "../validators/validate.js";
 import { verifyJWT, verifyPermission } from "../middlewares/auth.middlewares.js";
@@ -25,6 +25,6 @@ router.route("/avatar").post(verifyJWT,upload.single('avatar'),updateUserAvatar)
 router.route("/current-user").post(verifyJWT,getCurrentUser)
 router.route("/update-profile").post(verifyJWT,updateProfileValidator(),validate,updateProfile)
 
-
+router.route("/all-staff").get(verifyJWT,getAllStaff)
 
 export default router;

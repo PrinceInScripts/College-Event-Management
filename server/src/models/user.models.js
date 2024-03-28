@@ -3,6 +3,7 @@ import { AvailableUserGenderEnum, AvailableUserRoles, USER_TEMPORARY_TOKEN_EXPIR
 import bcrypt from "bcrypt"
 import { randomBytes, createHash } from "crypto";
 import jwt from "jsonwebtoken"
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const userSchema=new Schema({
        username:{
@@ -139,6 +140,10 @@ userSchema.methods.assignAsDepartmentHead = async function(departmentId) {
     this.department = departmentId;
     await this.save();
   };
+
+
+
+userSchema.plugin(mongooseAggregatePaginate)
 
 export const User=mongoose.model("User",userSchema);
 

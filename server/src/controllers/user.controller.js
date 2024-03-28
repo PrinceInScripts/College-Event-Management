@@ -7,6 +7,8 @@ import { asyncHandler } from "../utils/asyncHandler.utils.js"
 import { emailVerificationMailgenContent, forgotPasswordMailgenContent, sendEmail } from "../utils/mail.utils.js"
 import crypto from "crypto"
 import { uploadCloudinary } from "../utils/cloudinary.utils.js"
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import { getMongoosePaginationOptions } from "../utils/helper.utils.js"
 
 const generateAccessAndRefreshTokens=async (userId)=>{
     try {
@@ -386,6 +388,40 @@ const updateProfile=asyncHandler(async(req,res)=>{
 })
 
 
+const getAllStaff=asyncHandler(async (req,res)=>{
+    const {page=1,limit=10}=req.query
+
+    const staffAggregate=User.aggregate([{
+        $match:{
+            role:"STAFF"
+        }
+    }])
+
+    const staffMembers=await User.aggregatePaginate(
+        staffAggregate,
+        getMongoosePaginationOptions({
+            page,
+            limit,
+            customLabels:{
+                totalDocs:"Staff",
+                docs:"staff"
+            }
+        })
+    )
+
+    return res
+             .status(200)
+             .json(
+                new ApiResponse(
+                    200,
+                    staffMembers,
+                    "Staff Member fetched successfully"
+                )
+             )
+
+
+})
+
 export {
     registerUser,
     verifyEmail,
@@ -398,5 +434,7 @@ export {
     assignRole,
     getCurrentUser,
     updateUserAvatar,
-    updateProfile
+    updateProfile,
+    getAllStaff
+
 }
