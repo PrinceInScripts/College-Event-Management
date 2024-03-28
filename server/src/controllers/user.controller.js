@@ -397,7 +397,7 @@ const getAllStaff=asyncHandler(async (req,res)=>{
         }
     }])
 
-    const staffMembers=await User.aggregatePaginate(
+const staffMembers=await User.aggregatePaginate(
         staffAggregate,
         getMongoosePaginationOptions({
             page,
@@ -421,6 +421,39 @@ const getAllStaff=asyncHandler(async (req,res)=>{
 
 
 })
+const getAllStudents=asyncHandler(async (req,res)=>{
+    const {page=1,limit=10}=req.query
+
+    const studentsAggregate=User.aggregate([{
+        $match:{
+            role:"STUDENT"
+        }
+    }])
+
+    const students=await User.aggregatePaginate(
+        studentsAggregate,
+        getMongoosePaginationOptions({
+            page,
+            limit,
+            customLabels:{
+                totalDocs:"Students",
+                docs:"students"
+            }
+        })
+    )
+
+    return res
+             .status(200)
+             .json(
+                new ApiResponse(
+                    200,
+                    students,
+                    "Students fetched successfully"
+                )
+             )
+
+
+})
 
 export {
     registerUser,
@@ -435,6 +468,7 @@ export {
     getCurrentUser,
     updateUserAvatar,
     updateProfile,
-    getAllStaff
-
+    getAllStaff,
+    getAllStudents
+     
 }
