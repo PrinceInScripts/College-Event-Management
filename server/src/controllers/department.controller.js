@@ -183,6 +183,34 @@ const addStaffToDepartment=asyncHandler (async(req,res)=>{
 
 })
 
+const assignHeadToDepartment=asyncHandler(async (req,res)=>{
+        const {userId}=req.body;
+        const {departmentId}=req.params;
+
+        if(req.user.role !=="ADMIN"){
+            throw new ApiError(403,"Unauthorized access")
+        }
+
+        const user=await User.findById(userId)
+
+        if(!user){
+            throw new ApiError(404,"User not found")
+        }
+
+        await user.assignAsDepartmentHead(departmentId)
+
+        return res
+                 .status(201)
+                 .json(
+                    new ApiResponse(
+                        201,
+                        {},
+                        "User assigned as head of department successfully"
+                    )
+                 )
+})
+
+
 
 export {
     createDepartment,
@@ -190,5 +218,6 @@ export {
     getDepartmentById,
     updateDepartmentById,
     deleteDepartmentById,
-    addStaffToDepartment
+    addStaffToDepartment,
+    assignHeadToDepartment
 }
