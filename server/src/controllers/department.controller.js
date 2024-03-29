@@ -97,6 +97,9 @@ const updateDepartmentById=asyncHandler(async (req,res)=>{
         throw new ApiError(404,"Department not found")
     }
     
+    if(req.user.role !=="ADMIN"){
+        throw new ApiError(403,"Unauthorized access")
+    }
 
     department.name = name || department.name;
     department.description = description || department.description;
@@ -117,9 +120,37 @@ const updateDepartmentById=asyncHandler(async (req,res)=>{
              )
 
 })
+
+const deleteDepartmentById=asyncHandler(async (req,res)=>{
+    const {departmentId}=req.params;
+
+    const department=await Department.findById(departmentId)
+
+    if(!department){
+        throw new ApiError(404,"Department not found")
+    }
+
+    if(req.user.role !=="ADMIN"){
+        throw new ApiError(403,"Unauthorized access")
+    }
+
+    await Department.findByIdAndDelete(department._id);
+
+    return res
+             .status(201)
+             .json(
+                new ApiResponse(
+                    201,
+                    {},
+                    "Department deleted Successfully"
+                )
+             )
+
+})
 export {
     createDepartment,
     getAllDepartment,
     getDepartmentById,
-    updateDepartmentById
+    updateDepartmentById,
+    deleteDepartmentById
 }
