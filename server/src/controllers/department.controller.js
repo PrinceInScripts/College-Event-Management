@@ -13,11 +13,12 @@ const createDepartment=asyncHandler(async (req,res)=>{
         throw new ApiError(403,"Unauthorized access")
     }
 
-    const {name,description,address,phone,email}=req.body;
+    const {name,description,staff,address,phone,email}=req.body;
 
     const department=await Department.create({
         name,
-        description
+        description,
+        staff
     })
 
     department.contactInfo.address=address;
@@ -147,10 +148,47 @@ const deleteDepartmentById=asyncHandler(async (req,res)=>{
              )
 
 })
+
+const addStaffToDepartment=asyncHandler (async(req,res)=>{
+    const {departmentId,staffIds}=req.body
+
+    if(req.user.role !=="ADMIN"){
+        throw new ApiError(403,"Unauthorized access")
+    }
+
+    const department=await Department.findById(departmentId)
+
+    if(!department){
+        throw new ApiError(404,"Department not found")
+    }
+
+    const staffToAdd = await User.find({ _id: { $in: staffIds } });
+
+    if (staffToAdd.length !== staffIds.length){
+        throw new ApiError(201,"One or more staff members not found")
+    }
+
+    department.staff.push(...staffIds)
+    await department.save({validateBeforeSave:false})
+
+    return res
+             .status(201)
+             .json(
+                new ApiResponse(
+                    201,
+                    department,
+                    "Staff members added to the department successfully"
+                )
+             )
+
+})
+
+
 export {
     createDepartment,
     getAllDepartment,
     getDepartmentById,
     updateDepartmentById,
-    deleteDepartmentById
+    deleteDepartmentById,
+    addStaffToDepartment
 }
