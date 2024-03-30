@@ -210,7 +210,38 @@ const assignHeadToDepartment=asyncHandler(async (req,res)=>{
                  )
 })
 
+const requestToJoinDepartment=asyncHandler(async (req,res)=>{
+    const {userId}=req.user._id;
+    const {departmentId}=req.body;
 
+    const department=await Department.findById(departmentId)
+
+    if(!department){
+        throw new ApiError(404,"Department not found")
+    }
+
+    if(department.staff.includes(userId)  || department.students.includes(userId)){
+        throw new ApiError(400,"User is already a member of the department")
+    }
+
+    if(department.pendingRequest.includes(userId)){
+        throw new ApiError(400,"Request already sent to join the department")
+    }
+
+    departmentId.pendingRequest.push(userId);
+    await department.save({validateBeforeSave:false})
+
+    return res
+             .status(201)
+             .json(
+                new ApiResponse(
+                    201,
+                    department,
+                    "Request to join department sent successfully"
+                )
+             )
+
+})
 
 export {
     createDepartment,
@@ -219,5 +250,6 @@ export {
     updateDepartmentById,
     deleteDepartmentById,
     addStaffToDepartment,
-    assignHeadToDepartment
+    assignHeadToDepartment,
+    requestToJoinDepartment
 }
