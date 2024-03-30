@@ -22,7 +22,7 @@ const departmentSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:"User"
     }],
-    pendingRequest:[{
+    pendingRequests:[{
         type:Schema.Types.ObjectId,
         ref:"User"
     }],

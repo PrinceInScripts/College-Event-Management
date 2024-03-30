@@ -114,7 +114,7 @@ const updateDepartmentById=asyncHandler(async (req,res)=>{
              .status(201)
              .json(
                 new ApiResponse(
-                    200,
+                    201,
                     department,
                     "Department updated successfully"
                 )
@@ -224,11 +224,11 @@ const requestToJoinDepartment=asyncHandler(async (req,res)=>{
         throw new ApiError(400,"User is already a member of the department")
     }
 
-    if(department.pendingRequest.includes(userId)){
+    if(department.pendingRequests.includes(userId)){
         throw new ApiError(400,"Request already sent to join the department")
     }
 
-    departmentId.pendingRequest.push(userId);
+    department.pendingRequests.push(userId);
     await department.save({validateBeforeSave:false})
 
     return res
@@ -254,7 +254,7 @@ const manageJoinRequest=asyncHandler(async (req,res)=>{
         throw new ApiError(404,"Department not found")
     }
 
-    if(user.role !== "ADMIN" || user._id !== department.head.toString){
+    if(user.role !== "ADMIN" || user._id !== department.head.toString()){
         throw new ApiError(403,"Unauthorized access")
     }
 
@@ -264,13 +264,13 @@ const manageJoinRequest=asyncHandler(async (req,res)=>{
         throw new ApiError(404,"User not found")
     }
 
-    if(!department.pendingRequest.includes(userId)){
+    if(!department.pendingRequests.includes(userId)){
         throw new ApiError(400,"User has no pending request to join the department");
     }
 
     if(action === "APPROVE"){
         department.students.push(userId)
-        department.pendingRequest=department.pendingRequest.filter(id=>id.toString() !== userId)
+        department.pendingRequests=department.pendingRequests.filter(id=>id.toString() !== userId)
         await department.save({validateBeforeSave:false})
 
         return res
